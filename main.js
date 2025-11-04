@@ -17,12 +17,12 @@
 //
 const ASSET_REGISTRY = {
   images: {
-    "90s Brick (Default)": "modules/who-dis/assets/default-phone.png",
+    "90s Brick (Default)": "modules/who-dis/assets/nokia-3310.png",
     "Red Flip Phone": "modules/who-dis/assets/phone-flip-red.png",
     "Blue Flip Phone": "modules/who-dis/assets/phone-flip-blue.png"
   },
   sounds: {
-    "Nokia Ring (Default)": "modules/who-dis/assets/default-ringtone.mp3",
+    "Nokia Ring (Default)": "modules/who-dis/assets/nokia-ringtone.mp3",
     "Classic Office Ring": "modules/who-dis/assets/ring-office.mp3",
     "Digital Beep": "modules/who-dis/assets/ring-digital.mp3"
   }
