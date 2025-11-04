@@ -8,8 +8,57 @@
  * for a curated list of images and sounds defined in ASSET_REGISTRY.
  */
 
-// --- [PART 1: THE PHONE RINGER FUNCTION] ---
-// This is the same function as before, it just shows the phone.
+// --- [PART 1: ASSET REGISTRY] ---
+// Define your bundled assets here.
+// The "Key" (e.g., "Nokia Ring") is what the GM sees in the dropdown.
+// The "Value" (e.g., "modules/who-dis/assets/ring-nokia.mp3") is the file path.
+//
+// YOU MUST UPLOAD THESE FILES TO YOUR 'assets' FOLDER
+//
+const ASSET_REGISTRY = {
+  images: {
+    "90s Brick (Default)": "modules/who-dis/assets/default-phone.png",
+    "Red Flip Phone": "modules/who-dis/assets/phone-flip-red.png",
+    "Blue Flip Phone": "modules/who-dis/assets/phone-flip-blue.png"
+  },
+  sounds: {
+    "Nokia Ring (Default)": "modules/who-dis/assets/default-ringtone.mp3",
+    "Classic Office Ring": "modules/who-dis/assets/ring-office.mp3",
+    "Digital Beep": "modules/who-dis/assets/ring-digital.mp3"
+  }
+};
+
+// --- [PART 2: CLIENT-SIDE FUNCTIONS] ---
+
+/**
+ * Stops the ringing sound and slides the phone off-screen.
+ * This is now a separate function called by the socket.
+ */
+function stopCall() {
+  const RINGER_ID = "cell-phone-ringer-container";
+  const ringerElement = document.getElementById(RINGER_ID);
+  
+  if (ringerElement) {
+    // Find the sound object attached to this element by the showPhone function
+    const sound = ringerElement.sound;
+    if (sound) {
+      sound.stop();
+    }
+    
+    // Slide the phone away
+    ringerElement.classList.remove('visible');
+
+    // Clean up the DOM
+    setTimeout(() => {
+      ringerElement.remove();
+      document.getElementById("cell-phone-ringer-style")?.remove();
+    }, 1000);
+  }
+}
+
+/**
+ * Shows the phone, plays the sound, and attaches the new socket listener.
+ */
 function showPhone(data) {
   const { imagePath, soundPath, callerID } = data;
   const RINGER_ID = "cell-phone-ringer-container";
