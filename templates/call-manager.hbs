@@ -1,0 +1,30 @@
+<form class="flexcol">
+  <header class="window-header flexrow">
+    <div class="window-title">Who Dis? - Call Manager</div>
+  </header>
+
+  <ol class="directory-list">
+    {{#each calls}}
+    <li class="directory-item document flexrow" data-call-id="{{this.id}}">
+      <h4 class="entry-name"><a>{{this.callerID}}</a></h4>
+      <div class="entry-controls">
+        <a class="control-tool" data-action="ring" title="Ring Players">
+          <i class="fas fa-phone-volume"></i>
+        </a>
+        <a class="control-tool" data-action="edit" title="Edit Call">
+          <i class="fas fa-edit"></i>
+        </a>
+        <a class="control-tool" data-action="delete" title="Delete Call">
+          <i class="fas fa-trash"></i>
+        </a>
+      </div>
+    </li>
+    {{/each}}
+  </ol>
+
+  <footer class="window-footer">
+    <button type="button" data-action="create">
+      <i class="fas fa-plus"></i> Create New Call
+    </button>
+  </footer>
+</form>
