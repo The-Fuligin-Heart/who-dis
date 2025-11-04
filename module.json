@@ -2,7 +2,7 @@
   "id": "who-dis",
   "title": "Who Dis?",
   "description": "A GM tool to create, manage, and send phone calls to all players. (Requires companion macro to launch UI).",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "compatibility": {
     "minimum": "11",
     "verified": "13"
@@ -35,5 +35,5 @@
   "languages": [],
   "url": "https://github.com/The-Fuligin-Heart/who-dis",
   "manifest": "https://raw.githubusercontent.com/The-Fuligin-Heart/who-dis/main/module.json",
-  "download": "https://github.com/The-Fuligin-Heart/who-dis/archive/refs/tags/v1.0.9.zip"
+  "download": "https://github.com/The-Fuligin-Heart/who-dis/archive/refs/tags/v1.1.0.zip"
 } 
