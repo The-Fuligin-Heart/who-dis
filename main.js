@@ -1,7 +1,7 @@
 /*
  * main.js - The core script for 'who-dis' module
  *
- * v1.0.1 - Fixed 'controls.find' bug. 'controls' is an object, not an array.
+ * v1.0.3 - Moved button to 'notes' (Journal) control group for stability.
  */
 
 // This function is the "guts" - it shows the phone.
@@ -106,18 +106,22 @@ Hooks.once("ready", () => {
 
 /*
  * HOOK 3: The 'getSceneControlButtons' hook
+ *
+ * This hook adds the button to the controls.
+ * We are now adding it to the 'notes' (Journal) group.
  */
 Hooks.on("getSceneControlButtons", (controls) => {
+  // We only add the button for the GM
   if (game.user.isGM) {
-    // Find the 'Token' controls group
-    const tokenControls = controls.token; // <-- THIS IS THE FIX
+    // Get the 'notes' control group (the one with Journal Entries)
+    const notesControls = controls.notes;
 
     // Add our new button to it
-    if (tokenControls) {
-      tokenControls.tools.push({
+    if (notesControls) {
+      notesControls.tools.push({
         name: "ring-phone",
         title: "Ring Players' Phones",
-        icon: "fas fa-phone-volume",
+        icon: "fas fa-phone-volume", // The phone icon
         onClick: () => {
           // When GM clicks the button...
           const img = game.settings.get("who-dis", "imagePath");
@@ -129,7 +133,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
             soundPath: snd
           });
         },
-        button: true
+        button: true // This makes it a clickable button
       });
     }
   }
