@@ -1,20 +1,16 @@
-/* 
+/*
  * main.js - The core script for 'who-dis' module
  *
- * v1.0.9 - Major Feature Update
- * - Added Global "Answer": Clicking 'Answer' now stops the call for all players
- * by sending a socket request to the GM, who then broadcasts a stop command.
- * - Added Bundled Asset Dropdowns: Replaced FilePickers with <select> dropdowns
- * for a curated list of images and sounds defined in ASSET_REGISTRY.
+ * v1.0.10 - Audio Fix
+ * - Storing the sound object on the DOM element was unreliable.
+ * - The active sound is now stored in a module-scoped variable 'activeCallSound'
+ * to ensure 'stopCall()' can always find and stop it.
  */
 
-// --- [PART 1: ASSET REGISTRY] ---
-// Define your bundled assets here.
-// The "Key" (e.g., "Nokia Ring") is what the GM sees in the dropdown.
-// The "Value" (e.g., "modules/who-dis/assets/ring-nokia.mp3") is the file path.
-//
-// YOU MUST UPLOAD THESE FILES TO YOUR 'assets' FOLDER
-//
+// --- [PART 1: MODULE-SCOPED SOUND VARIABLE] ---
+let activeCallSound = null;
+
+// --- [PART 2: ASSET REGISTRY] ---
 const ASSET_REGISTRY = {
   images: {
     "90s Brick (Default)": "modules/who-dis/assets/nokia-3310.png",
@@ -28,27 +24,25 @@ const ASSET_REGISTRY = {
   }
 };
 
-// --- [PART 2: CLIENT-SIDE FUNCTIONS] ---
+// --- [PART 3: CLIENT-SIDE FUNCTIONS] ---
 
 /**
- * Stops the ringing sound and slides the phone off-screen.
- * This is now a separate function called by the socket.
+ * [MODIFIED] Stops the ringing sound and slides the phone off-screen.
+ * Now uses the 'activeCallSound' variable.
  */
 function stopCall() {
   const RINGER_ID = "cell-phone-ringer-container";
   const ringerElement = document.getElementById(RINGER_ID);
   
+  // Stop the sound
+  if (activeCallSound) {
+    activeCallSound.stop();
+    activeCallSound = null; // Clear the reference
+  }
+  
+  // Stop the animation and clean up
   if (ringerElement) {
-    // Find the sound object attached to this element by the showPhone function
-    const sound = ringerElement.sound;
-    if (sound) {
-      sound.stop();
-    }
-    
-    // Slide the phone away
     ringerElement.classList.remove('visible');
-
-    // Clean up the DOM
     setTimeout(() => {
       ringerElement.remove();
       document.getElementById("cell-phone-ringer-style")?.remove();
@@ -57,9 +51,14 @@ function stopCall() {
 }
 
 /**
- * Shows the phone, plays the sound, and attaches the new socket listener.
+ * [MODIFIED] Shows the phone, plays the sound, and stores the sound reference.
  */
 function showPhone(data) {
+  // If a call is already active, stop it before starting the new one
+  if (activeCallSound) {
+    stopCall();
+  }
+  
   const { imagePath, soundPath, callerID } = data;
   const RINGER_ID = "cell-phone-ringer-container";
   const STYLE_ID = "cell-phone-ringer-style";
@@ -111,14 +110,18 @@ function showPhone(data) {
   const answerButton = ringerElement.querySelector('.answer-button');
 
   AudioHelper.play({ src: soundPath, volume: 0.7, loop: true }, true).then(sound => {
-    // Attach the sound object to the element so 'stopCall' can find it
-    ringerElement.sound = sound;
+    // Store the sound in our reliable variable
+    activeCallSound = sound;
+    
+    // Handle the case where the sound might not play
+    if (!sound) {
+      console.error("Who Dis? | AudioHelper failed to return a sound object.");
+      return;
+    }
 
-    // --- [NEW] Answer Button Logic ---
     answerButton.addEventListener('click', () => {
-      // 1. Immediately stop it locally
-      stopCall(); 
-      // 2. Tell the GM (and by proxy, everyone else) to stop
+      // We don't need to call stopCall() locally anymore,
+      // the requestStopCall will broadcast to *everyone*, including this client.
       window.MyPhoneRingerSocket.executeAsGM("requestStopCall");
     });
   });
@@ -126,21 +129,16 @@ function showPhone(data) {
   setTimeout(() => ringerElement.classList.add('visible'), 50);
 }
 
-// --- [PART 3: GM-ONLY SOCKET FUNCTION] ---
-
-/**
- * This function ONLY runs on the GM's client.
- * A player calls this, and the GM then broadcasts to everyone.
- */
+// --- [PART 4: GM-ONLY SOCKET FUNCTION] ---
+// (This function is unchanged)
 function requestStopCall() {
   if (!game.user.isGM) return;
-  
-  // GM broadcasts the 'stopCall' command to all players
   window.MyPhoneRingerSocket.executeForEveryone("stopCall");
 }
 
 
-// --- [PART 4: THE CALL MANAGER APPLICATION] ---
+// --- [PART 5: THE CALL MANAGER APPLICATION] ---
+// (This class is unchanged)
 class CallManagerApp extends Application {
 
   constructor(options = {}) {
@@ -246,24 +244,15 @@ class CallManagerApp extends Application {
     });
   }
 
-  /**
-   * [HEAVILY MODIFIED] The main dialog for Creating or Editing a call
-   * Now uses <select> dropdowns based on ASSET_REGISTRY
-   */
   _openCallDialog(callData = {}, callId = null) {
-    // --- Prepare data for the template ---
-    
-    // Check if we are targeting all or specific
     const isSpecific = Array.isArray(callData.targetPlayers) && !callData.targetPlayers.includes('all');
     
-    // Get all users and mark if they are checked
     const allUsers = game.users.map(u => ({
       id: u.id,
       name: u.name,
       checked: isSpecific ? callData.targetPlayers.includes(u.id) : false
     }));
 
-    // Use existing data or pull from defaults
     const data = {
       callerID: callData.callerID || "INCOMING CALL",
       imagePath: callData.imagePath || ASSET_REGISTRY.images[Object.keys(ASSET_REGISTRY.images)[0]],
@@ -272,15 +261,11 @@ class CallManagerApp extends Application {
 
     const title = callId ? "Edit Call" : "Create New Call";
     
-    // --- Build the new HTML with <select> dropdowns ---
-    
-    // Build image dropdown
     let imageOptions = Object.entries(ASSET_REGISTRY.images).map(([name, path]) => {
       const selected = (path === data.imagePath) ? 'selected' : '';
       return `<option value="${path}" ${selected}>${name}</option>`;
     }).join('');
 
-    // Build sound dropdown
     let soundOptions = Object.entries(ASSET_REGISTRY.sounds).map(([name, path]) => {
       const selected = (path === data.soundPath) ? 'selected' : '';
       return `<option value="${path}" ${selected}>${name}</option>`;
@@ -341,7 +326,6 @@ class CallManagerApp extends Application {
       title: title,
       content: content,
       render: (html) => {
-        // Radio button listener to show/hide the checklist
         html.find('input[name="targetType"]').on('change', (event) => {
           const showChecklist = $(event.currentTarget).val() === 'specific';
           if (showChecklist) {
@@ -367,8 +351,8 @@ class CallManagerApp extends Application {
 
             const newCallData = {
               callerID: html.find('#caller-id').val(),
-              imagePath: html.find('#phone-image').val(), // Get value from <select>
-              soundPath: html.find('#phone-sound').val(), // Get value from <select>
+              imagePath: html.find('#phone-image').val(),
+              soundPath: html.find('#phone-sound').val(),
               targetPlayers: targetPlayers
             };
 
@@ -390,15 +374,10 @@ class CallManagerApp extends Application {
 }
 
 
-// --- [PART 5: THE HOOKS] ---
-
-/*
- * HOOK 1: The 'init' hook
- */
+// --- [PART 6: THE HOOKS] ---
+// (These are all unchanged)
 Hooks.once("init", () => {
   console.log("Who Dis? | Initializing settings...");
-
-  // We change the defaults to just pull from the asset registry
   const defaultImg = ASSET_REGISTRY.images[Object.keys(ASSET_REGISTRY.images)[0]];
   const defaultSnd = ASSET_REGISTRY.sounds[Object.keys(ASSET_REGISTRY.sounds)[0]];
 
@@ -411,7 +390,6 @@ Hooks.once("init", () => {
     default: defaultImg,
     filePicker: "image"
   });
-
   game.settings.register("who-dis", "defaultSound", {
     name: "Default Ringtone",
     hint: "Default path for the ringtone.",
@@ -421,7 +399,6 @@ Hooks.once("init", () => {
     default: defaultSnd,
     filePicker: "audio"
   });
-
   game.settings.register("who-dis", "savedCalls", {
     name: "Saved Phone Calls",
     scope: "world",
@@ -431,30 +408,17 @@ Hooks.once("init", () => {
   });
 });
 
-/*
- * HOOK 2: The 'ready' hook
- * [MODIFIED] We now register THREE socket functions
- */
 Hooks.once("ready", () => {
   if (game.modules.get("socketlib")?.active) {
     window.MyPhoneRingerSocket = socketlib.registerModule("who-dis");
-    
-    // 1. GM calls this to show the phone
     window.MyPhoneRingerSocket.register("showPhone", showPhone);
-    
-    // 2. Player calls this (as GM) to request a stop
     window.MyPhoneRingerSocket.register("requestStopCall", requestStopCall);
-    
-    // 3. GM calls this to make everyone's phone stop
     window.MyPhoneRingerSocket.register("stopCall", stopCall);
-
   } else {
     if (game.user.isGM) {
       ui.notifications.error("Who Dis? module requires Socketlib to be active!");
     }
   }
   console.log("Who Dis? | Listener registered. Ready for calls.");
-  
-  // Make our App available globally for the macro
   window.WhoDisManager = CallManagerApp;
 });
