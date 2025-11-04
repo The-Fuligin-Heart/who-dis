@@ -1,4 +1,4 @@
-/*
+/* 
  * main.js - The core script for 'who-dis' module
  *
  * v1.0.9 - Major Feature Update
