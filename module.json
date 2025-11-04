@@ -30,6 +30,6 @@
   "packs": [],
   "languages": [],
   "url": "https://github.com/The-Fuligin-Heart/who-dis",
-  "manifest": "https://raw.githubusercontent.com/The-Fuligin-Heart/who-dis/main/module.json",
+  "manifest": "https://raw.githubusercontent.com/The-Fuligin-Heart/who-dis/refs/heads/main/module.json",
   "download": "https://github.com/The-Fuligin-Heart/who-dis/archive/refs/tags/1.0.0.zip"
 }
