@@ -1,0 +1,35 @@
+{
+  "id": "who-dis",
+  "title": "Who Dis?",
+  "description": "Adds a GM tool to make a 90s-style cell phone ring for all connected players.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "The Fuligin Heart",
+      "email": "",
+      "url": ""
+    }
+  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "socketlib",
+        "type": "module",
+        "compatibility": {}
+      }
+    ]
+  },
+  "esmodules": [
+    "main.js"
+  ],
+  "styles": [],
+  "packs": [],
+  "languages": [],
+  "url": "https://github.com/The-Fuligin-Heart/who-dis",
+  "manifest": "https://raw.githubusercontent.com/The-Fuligin-Heart/who-dis/main/module.json",
+  "download": "https://github.com/The-Fuligin-Heart/who-dis/archive/refs/tags/v1.0.0.zip"
+}
